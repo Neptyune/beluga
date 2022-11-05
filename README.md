@@ -5,6 +5,7 @@ A beautiful Docker TUI with a dashboard page
 ## Key Legend
 
 | Key | Action |
+| --- | :----: |
 | Tab | Moves across a tab |
 | Shift-Tab | Moves back a tab |
 | k | go up |
