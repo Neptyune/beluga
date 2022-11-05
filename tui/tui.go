@@ -12,8 +12,14 @@ import (
 // Entry to point to start the TUI
 func StartTea() {
 	tabs := []string{"CONTAINER", "IMAGES", "VOLUMES", "DASHBOARD"}
+	// Creation of all the View models?
+	containerModelObject := containerModel{}
+	imagesModelObject := imagesModel{}
+	volumesModelObject := volumesModel{}
+	dashboardModelObject := dashboardModel{}
+	tabContent := []tea.Model{containerModelObject, imagesModelObject, volumesModelObject, dashboardModelObject}
 
-	m := mainModel{Tabs: tabs}
+	m := mainModel{Tabs: tabs, TabContent: tabContent}
 	if err := tea.NewProgram(m, tea.WithAltScreen()).Start(); err != nil {
 		fmt.Printf("There was an error: %v\n", err)
 		os.Exit(1)
@@ -31,9 +37,9 @@ const (
 
 type mainModel struct {
 	state      sessionState
-	Tabs       []string  // Tabs to be shown
-	TabContent tea.Model // What is inside the tabs
-	activeTab  int       // Currently chose tab
+	Tabs       []string    // Tabs to be shown
+	TabContent []tea.Model // What is inside the tabs
+	activeTab  int         // Currently chose tab
 }
 
 func (m mainModel) Init() tea.Cmd {
@@ -42,18 +48,29 @@ func (m mainModel) Init() tea.Cmd {
 
 func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	// We want to quit and move across tabs
 	case tea.KeyMsg:
+		// We want to quit and move across tabs
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "tab":
 			m.activeTab = min(m.activeTab+1, len(m.Tabs)-1)
+			m.state++ // changing state so that it know what tab is in focux
 			return m, nil
 		case "shift+tab":
 			m.activeTab = max(m.activeTab-1, 0)
+			m.state--
 			return m, nil
 		}
+
+		switch m.state {
+		case container:
+
+		case images:
+		case volumes:
+		case dashboard:
+		}
+
 	}
 
 	return m, nil
@@ -87,7 +104,7 @@ func (m mainModel) View() string {
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 	doc.WriteString(row)
 	doc.WriteString("\n")
-	doc.WriteString(windowStyle.Width((lipgloss.Width(row) - windowStyle.GetHorizontalFrameSize())).Render("Hello"))
+	doc.WriteString(windowStyle.Width((lipgloss.Width(row) - windowStyle.GetHorizontalFrameSize())).Render(m.TabContent[m.activeTab].View()))
 	return docStyle.Render(doc.String())
 }
 
