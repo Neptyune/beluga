@@ -10,23 +10,23 @@ import (
 )
 
 func VolumePrune() string {
-	return CreateTerminalOutput("/C", "docker", "volume", "prune", "-f")
+	return CreateTerminalOutput("volume", "prune", "-f")
 }
 
 func VolumeCreate() string { //haven't tested because idk what removing volumes is
-	return CreateTerminalOutput("/C", "docker", "volume", "create")
+	return CreateTerminalOutput("volume", "create")
 }
 
 func VolumeInspect() string {
-	return CreateTerminalOutput("/C", "docker", "volume", "inspect")
+	return CreateTerminalOutput("volume", "inspect")
 }
 
 func VolumeList() string {
-	return CreateTerminalOutput("/C", "docker", "volume", "list")
+	return CreateTerminalOutput("volume", "list")
 }
 
 func ContainerListAsString() string {
-	return CreateTerminalOutput("/C", "docker", "images", "list")
+	return CreateTerminalOutput("images", "list")
 
 }
 
@@ -39,7 +39,7 @@ func ContainerListAsSlice() []string {
 }
 
 func ImagesListAsSlice() []string {
-	imagesAsString := CreateTerminalOutput("/C", "docker", "images", "list")
+	imagesAsString := CreateTerminalOutput("images", "list")
 	re := regexp.MustCompile(" +")
 	split := re.Split(imagesAsString, -1)
 	fmt.Println(split)
@@ -56,19 +56,23 @@ func removeFromSlice[T any](slice []T, index int) []T {
 }
 
 func CreateTerminalOutput(args ...string) string {
-	out, err := exec.Command(getTerminalType(), args...).Output()
+	var out []byte
+	var err error
+	if isWindows() {
+		winArgs := make([]string, 1, 4)
+		winArgs = []string{"/C", "docker"}
+		winArgs = append(winArgs, args...)
+		out, err = exec.Command("cmd", winArgs...).Output()
+	} else {
+		out, err = exec.Command("docker", args...).Output()
+	}
 	if err != nil {
 		fmt.Println("ERROR")
-		fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 	return string(out)
 }
 
-func getTerminalType() string {
-	if runtime.GOOS == "windows" {
-		return "cmd"
-	} else {
-		return "bash"
-	}
+func isWindows() bool {
+	return runtime.GOOS == "windows"
 }
