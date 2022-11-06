@@ -78,5 +78,5 @@ func (m volumesOutputModel) View() string {
 	//		myStr += "[ ]" + commandOption + "\n"
 	//	}
 	//}
-	//return myStr
+	return myStr
 }
