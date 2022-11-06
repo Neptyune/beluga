@@ -17,11 +17,12 @@ func StartTea() {
 	containersModelObject := containersModel{}
 	imagesModelObject := imagesModel{}
 	//volumesModelOutput := CreateVolumeOutputModel()
-	volumesModelInput := CreateVolumeInputModel()
+	//volumesModelInput := CreateVolumeInputModel()
+	volumeModel := createVolumesComponent()
 
 	dashboardModelObject := dashboardModel{}
-	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumesModelInput, dashboardModelObject}
-
+	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumeModel, dashboardModelObject}
+	//tabContent := []component{createVolumesComponent(), createVolumesComponent(), createVolumesComponent(), createVolumesComponent()}
 	m := mainModel{Tabs: tabs, TabContent: tabContent}
 	if err := tea.NewProgram(m, tea.WithAltScreen()).Start(); err != nil {
 		fmt.Printf("There was an error: %v\n", err)
@@ -29,22 +30,30 @@ func StartTea() {
 	}
 }
 
-func CreateVolumeOutputModel() volumesOutputModel {
-	var cursorPos int = 0
-	return volumesOutputModel{
+func createVolumesComponent() tea.Model {
+	return volumesComponent{
+		commandOptions: []string{"List", "Prune"},
 		commandOutputs: []string{commandExecuter.VolumeList(), commandExecuter.VolumePrune()},
-		cursor:         &cursorPos,
+		Cursor:         0,
 	}
 }
 
-func CreateVolumeInputModel() volumesInputModel {
-	volumesModelOutput := CreateVolumeOutputModel()
-	return volumesInputModel{
-		commandOptions:     []string{"List", "Prune"},
-		Cursor:             volumesModelOutput.cursor,
-		volumesOutputModel: volumesModelOutput,
-	}
-}
+//func CreateVolumeOutputModel() volumesComponent {
+//	var cursorPos int = 0
+//	return volumesOutputModel{
+//		commandOutputs: []string{commandExecuter.VolumeList(), commandExecuter.VolumePrune()},
+//		cursor:         &cursorPos,
+//	}
+//}
+//
+//func CreateVolumeInputModel() volumesInputModel {
+//	volumesModelOutput := CreateVolumeOutputModel()
+//	return volumesInputModel{
+//		commandOptions:     []string{"List", "Prune"},
+//		Cursor:             volumesModelOutput.cursor,
+//		volumesOutputModel: volumesModelOutput,
+//	}
+//}
 
 type sessionState int
 
