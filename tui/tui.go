@@ -13,11 +13,11 @@ import (
 func StartTea() {
 	tabs := []string{"CONTAINER", "IMAGES", "VOLUMES", "DASHBOARD"}
 	// Creation of all the View models?
-	containerModelObject := containerModel{}
+	containersModelObject := containersModel{}
 	imagesModelObject := imagesModel{}
 	volumesModelObject := volumesModel{}
 	dashboardModelObject := dashboardModel{}
-	tabContent := []tea.Model{containerModelObject, imagesModelObject, volumesModelObject, dashboardModelObject}
+	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumesModelObject, dashboardModelObject}
 
 	m := mainModel{Tabs: tabs, TabContent: tabContent}
 	if err := tea.NewProgram(m, tea.WithAltScreen()).Start(); err != nil {
