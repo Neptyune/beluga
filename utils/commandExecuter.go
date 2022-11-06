@@ -1,4 +1,4 @@
-package Utils
+package utils
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ func VolumePrune() string {
 }
 
 func VolumeCreate() string { //haven't tested because idk what removing volumes is
-	return CreateTerminalOutput("/C", "docker", "volume", "create")
+	return CreateTerminalOutput("volume", "create")
 }
 
 func VolumeInspect() string {
@@ -56,7 +56,16 @@ func ImagesSearch() {
 }
 
 func CreateTerminalOutput(args ...string) string {
-	out, err := exec.Command(getTerminalType(), args...).Output()
+	var out []byte
+	var err error
+	if isWindows() {
+		winArgs := make([]string, 1, 4)
+		winArgs = []string{"/C", "docker"}
+		winArgs = append(winArgs, args...)
+		out, err = exec.Command("cmd", winArgs...).Output()
+	} else {
+		out, err = exec.Command("docker", args...).Output()
+	}
 	if err != nil {
 		fmt.Println("ERROR")
 		fmt.Println(err.Error())
@@ -65,10 +74,6 @@ func CreateTerminalOutput(args ...string) string {
 	return string(out)
 }
 
-func getTerminalType() string {
-	if runtime.GOOS == "windows" {
-		return "cmd"
-	} else {
-		return "bash"
-	}
+func isWindows() bool {
+	return runtime.GOOS == "windows"
 }
