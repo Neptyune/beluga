@@ -16,10 +16,8 @@ func StartTea() {
 	// Creation of all the View models?
 	containersModelObject := containersModel{}
 	imagesModelObject := imagesModel{}
-	volumesModelOutput := CreateVolumeOutputModel()
-	s := volumesModelOutput.commandPrompts[0]
-	fmt.Println("S is: ", s)
-	volumesModelInput := CreateVolumeInputModel(volumesModelOutput)
+	//volumesModelOutput := CreateVolumeOutputModel()
+	volumesModelInput := CreateVolumeInputModel()
 
 	dashboardModelObject := dashboardModel{}
 	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumesModelInput, dashboardModelObject}
@@ -32,17 +30,19 @@ func StartTea() {
 }
 
 func CreateVolumeOutputModel() volumesOutputModel {
+	var cursorPos int = 0
 	return volumesOutputModel{
-		commandPrompts: []interface{}{commandExecuter.VolumeList()},
+		commandOutputs: []string{commandExecuter.VolumeList(), commandExecuter.VolumePrune()},
+		cursor:         &cursorPos,
 	}
 }
 
-func CreateVolumeInputModel(model volumesOutputModel) volumesModel {
-	return volumesModel{
-		commandOptions: []string{"List", "Inspect", "Create", "Prune"},
-		cursor:         1,
-		//volumesOutputModel : model,
-
+func CreateVolumeInputModel() volumesInputModel {
+	volumesModelOutput := CreateVolumeOutputModel()
+	return volumesInputModel{
+		commandOptions:     []string{"List", "Prune"},
+		Cursor:             volumesModelOutput.cursor,
+		volumesOutputModel: volumesModelOutput,
 	}
 }
 
