@@ -10,7 +10,7 @@ import (
 )
 
 func VolumePrune() string {
-	return CreateTerminalOutput("/C", "docker", "volume", "prune", "-f")
+	return CreateTerminalOutput("volume", "prune", "-f")
 }
 
 func VolumeCreate() string { //haven't tested because idk what removing volumes is
@@ -18,15 +18,15 @@ func VolumeCreate() string { //haven't tested because idk what removing volumes 
 }
 
 func VolumeInspect() string {
-	return CreateTerminalOutput("/C", "docker", "volume", "inspect")
+	return CreateTerminalOutput("volume", "inspect")
 }
 
 func VolumeList() string {
-	return CreateTerminalOutput("/C", "docker", "volume", "list")
+	return CreateTerminalOutput("volume", "list")
 }
 
 func ContainerListAsString() string {
-	return CreateTerminalOutput("/C", "docker", "images", "list")
+	return CreateTerminalOutput("images", "list")
 
 }
 
@@ -39,7 +39,7 @@ func ContainerListAsSlice() []string {
 }
 
 func ImagesListAsSlice() []string {
-	imagesAsString := CreateTerminalOutput("/C", "docker", "images", "list")
+	imagesAsString := CreateTerminalOutput("images", "list")
 	re := regexp.MustCompile(" +")
 	split := re.Split(imagesAsString, -1)
 	fmt.Println(split)
@@ -47,12 +47,12 @@ func ImagesListAsSlice() []string {
 
 }
 
-func removeFromSlice[T any](slice []T, index int) []T {
-	return append(slice[:index], slice[index+1:]...)
-}
-
 func ImagesSearch() {
 	//todo implement
+}
+
+func removeFromSlice[T any](slice []T, index int) []T {
+	return append(slice[:index], slice[index+1:]...)
 }
 
 func CreateTerminalOutput(args ...string) string {
@@ -68,7 +68,6 @@ func CreateTerminalOutput(args ...string) string {
 	}
 	if err != nil {
 		fmt.Println("ERROR")
-		fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 	return string(out)
