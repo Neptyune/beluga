@@ -2,27 +2,48 @@ package tui
 
 import (
 	"fmt"
+	commandExecuter "github.com/neptyune/beluga/utils"
 	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 )
 
 // Entry to point to start the TUI
 func StartTea() {
-	tabs := []string{"CONTAINER", "IMAGES", "VOLUMES", "DASHBOARD"}
+	tabs := []string{"CONTAINERS", "IMAGES", "VOLUMES", "DASHBOARD"}
 	// Creation of all the View models?
 	containersModelObject := containersModel{}
 	imagesModelObject := imagesModel{}
-	volumesModelObject := volumesModel{}
+	volumesModelOutput := CreateVolumeOutputModel()
+	s := volumesModelOutput.commandPrompts[0]
+	fmt.Println("S is: ", s)
+	volumesModelInput := CreateVolumeInputModel(volumesModelOutput)
+
 	dashboardModelObject := dashboardModel{}
-	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumesModelObject, dashboardModelObject}
+	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumesModelInput, dashboardModelObject}
 
 	m := mainModel{Tabs: tabs, TabContent: tabContent}
 	if err := tea.NewProgram(m, tea.WithAltScreen()).Start(); err != nil {
 		fmt.Printf("There was an error: %v\n", err)
 		os.Exit(1)
+	}
+}
+
+func CreateVolumeOutputModel() volumesOutputModel {
+	return volumesOutputModel{
+		commandPrompts: []interface{}{commandExecuter.VolumeList()},
+	}
+}
+
+func CreateVolumeInputModel(model volumesOutputModel) volumesModel {
+	return volumesModel{
+		commandOptions: []string{"List", "Inspect", "Create", "Prune"},
+		cursor:         1,
+		//volumesOutputModel : model,
+
 	}
 }
 
@@ -63,20 +84,8 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		switch m.state {
-		case container:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		case images:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		case volumes:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		case dashboard:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		}
+		newMainModel, _ := m.TabContent[m.activeTab].Update(msg)
+		m.TabContent[m.activeTab] = newMainModel
 
 	}
 
@@ -84,54 +93,117 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m mainModel) View() string {
+	physicalWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	doc := strings.Builder{}
-	var renderedTabs []string
 
-	for i, t := range m.Tabs {
-		var style lipgloss.Style
-		isFirst, isLast, isActive := i == 0, i == len(m.Tabs)-1, i == m.activeTab
-		if isActive {
-			style = activeTabStyle.Copy()
-		} else {
-			style = inactiveTabStyle.Copy()
+	// Tabs [LAYER: 1]
+	{
+		var renderedTabs []string
+
+		for i, tab := range m.Tabs {
+			if i == m.activeTab {
+				renderedTabs = append(renderedTabs, activeTabStyle.Render(tab))
+			} else {
+				renderedTabs = append(renderedTabs, tabStyle.Render(tab))
+			}
 		}
-		border, _, _, _, _ := style.GetBorder()
-		if isFirst && isActive {
-			border.BottomLeft = "|"
-		} else if isFirst && !isActive {
-			border.BottomLeft = "├"
-		} else if isLast && isActive {
-			border.BottomRight = "│"
-		} else if isLast && !isActive {
-			border.BottomRight = "┤"
-		}
-		style = style.Border(border)
-		renderedTabs = append(renderedTabs, style.Render(t))
+
+		var renderedTabBlock = lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
+
+		gap := strings.Repeat(" ", max(0, physicalWidth-lipgloss.Width(renderedTabBlock)-sum(layerSpacing[:1])*2))
+		doc.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, renderedTabBlock, gap))
 	}
-	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
-	doc.WriteString(row)
-	doc.WriteString("\n")
-	doc.WriteString(windowStyle.Width((lipgloss.Width(row) - windowStyle.GetHorizontalFrameSize())).Render(m.TabContent[m.activeTab].View()))
-	return docStyle.Render(doc.String())
+
+	// Tab Content [LAYER: 2]
+	{
+		doc.WriteString("\n" + tabContentStyle.Width(physicalWidth-sum(layerSpacing[:2])*2).Render(m.TabContent[m.activeTab].View()))
+	}
+
+	// Page Drawing (the outer border) [LAYER: 0]
+	{
+		footer := lipgloss.JoinHorizontal( //Hard coded and doesn't change
+			lipgloss.Bottom,
+			footerEdgeStyle.Margin(0, 0, 0, 1).Render("└"),
+			lipgloss.PlaceHorizontal(
+				physicalWidth-4,
+				lipgloss.Center,
+				lipgloss.JoinHorizontal(
+					lipgloss.Bottom,
+					footerEdgeStyle.Render("〈"),
+					lipgloss.NewStyle().Foreground(themeColours[0]).Italic(true).Render(" beluga "),
+					footerEdgeStyle.Render("〉"),
+				),
+				lipgloss.WithWhitespaceChars("─"),
+				lipgloss.WithWhitespaceForeground(themeColours[3]),
+			),
+			footerEdgeStyle.Margin(0, 1, 0, 0).Render("┘"),
+		)
+
+		page := pageStyle.Render(doc.String())
+		doc.Reset()
+		doc.WriteString(lipgloss.JoinVertical(lipgloss.Left, page, footerMarginAdder.Render(footer)))
+	}
+	doc.WriteString("\n\n" + fmt.Sprintln(layerSpacing[0], layerSpacing[1], sum(layerSpacing[:2]), layerSpacing[:2], "\n", physicalWidth, physicalWidth-sum(layerSpacing[:1])*2))
+	return doc.String()
 }
 
-func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
-	border := lipgloss.RoundedBorder()
-	border.BottomLeft = left
-	border.Bottom = middle
-	border.BottomRight = right
-	return border
+// STYLING //
+
+// A list to keep track of each of our horisontal layers spacing (padding/margins)
+// -> Each element is a sum of the previous with the new spacing for that layer added
+// [LAYER: x] references are given next to items that are on that specified layer (indexed from 0)
+var layerSpacing = []int{
+	(pageStyle.GetHorizontalFrameSize()) / 2,
+	(tabContentStyle.GetHorizontalFrameSize()) / 2,
+}
+
+// Our theme colours light to dark
+var themeColours = map[int]lipgloss.Color{
+	0: lipgloss.Color("#B8D1EB"),
+	1: lipgloss.Color("#89B9D9"),
+	2: lipgloss.Color("#68A4CA"),
+	3: lipgloss.Color("#4489B2"),
+	4: lipgloss.Color("#255688"),
+	5: lipgloss.Color("#183C69"),
 }
 
 var (
-	inactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
-	activeTabBorder   = tabBorderWithBottom("┘", " ", "└")
-	docStyle          = lipgloss.NewStyle().Padding(1, 2, 1, 2)
-	highlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
-	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 1)
-	activeTabStyle    = inactiveTabStyle.Copy().Border(activeTabBorder, true)
-	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Padding(2, 0).Align(lipgloss.Center).Border(lipgloss.NormalBorder()).UnsetBorderTop()
+	// Page (the border of the app) [LAYER: 0]
+	pageStyle = lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder(), true, true, false).
+			BorderForeground(themeColours[4]).
+			Margin(1, 1, 0).
+			Padding(0, 1, 1)
+
+	// Footer (bottom of border) [LAYER: 0]
+	footerEdgeStyle = lipgloss.NewStyle().
+			Foreground(themeColours[4])
+
+	footerMarginAdder = lipgloss.NewStyle().
+				Margin(0, 0, 1)
+
+	// Tabs [LAYER: 1]
+	tabBaseStyle = lipgloss.NewStyle().
+			Margin(1, 2, 0).
+			Padding(0, 1, 0).
+			Foreground(themeColours[0])
+
+	tabStyle = tabBaseStyle.Copy().
+			Faint(true)
+
+	activeTabStyle = tabBaseStyle.Copy().
+			Border(lipgloss.NormalBorder(), false, false, true).
+			BorderForeground(themeColours[1])
+
+	// Tab Content [LAYER: 2]
+	tabContentStyle = lipgloss.NewStyle().
+			Margin(0, 4).
+			Padding(2, 0).
+			Align(lipgloss.Center).
+			Border(lipgloss.NormalBorder())
 )
+
+// END OF STYLING //
 
 func max(a, b int) int {
 	if a > b {
@@ -145,4 +217,12 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func sum(array []int) int {
+	result := 0
+	for _, v := range array {
+		result += v
+	}
+	return result
 }
