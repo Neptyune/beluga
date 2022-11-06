@@ -1,4 +1,4 @@
-package Utils
+package utils
 
 import (
 	"fmt"
@@ -8,15 +8,24 @@ import (
 )
 
 func VolumePrune() string {
-	return CreateTerminalOutput("/C", "docker", "volume", "prune", "-af")
+	return CreateTerminalOutput("volume", "prune", "-f")
 }
 
 func VolumeCreate() string { //haven't tested because idk what removing volumes is
-	return CreateTerminalOutput("/C", "docker", "volume", "create")
+	return CreateTerminalOutput("volume", "create")
 }
 
 func CreateTerminalOutput(args ...string) string {
-	out, err := exec.Command(getTerminalType(), args...).Output()
+	var out []byte
+	var err error
+	if isWindows() {
+		winArgs := make([]string, 1, 4)
+		winArgs = []string{"/C", "docker"}
+		winArgs = append(winArgs, args...)
+		out, err = exec.Command("cmd", winArgs...).Output()
+	} else {
+		out, err = exec.Command("docker", args...).Output()
+	}
 	if err != nil {
 		fmt.Println("ERROR")
 		log.Fatal(err)
@@ -24,10 +33,6 @@ func CreateTerminalOutput(args ...string) string {
 	return string(out)
 }
 
-func getTerminalType() string {
-	if runtime.GOOS == "windows" {
-		return "cmd"
-	} else {
-		return "bash"
-	}
+func isWindows() bool {
+	return runtime.GOOS == "windows"
 }
