@@ -14,5 +14,5 @@ func (m containerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m containerModel) View() string {
-	return "This is the container tab"
+	return "This is the container tab."
 }

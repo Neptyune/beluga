@@ -65,10 +65,17 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch m.state {
 		case container:
-
+			m.TabContent[m.activeTab].Update(msg)
+			break
 		case images:
+			m.TabContent[m.activeTab].Update(msg)
+			break
 		case volumes:
+			m.TabContent[m.activeTab].Update(msg)
+			break
 		case dashboard:
+			m.TabContent[m.activeTab].Update(msg)
+			break
 		}
 
 	}
