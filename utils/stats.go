@@ -31,6 +31,33 @@ type LiveContainer struct {
 	PIDs      string `json:"PIDs"`
 }
 
+type DockerInfo struct {
+	Containers        int
+	ContainersRunning int
+	ContainersPaused  int
+	ContainersStopped int
+	Images            int
+	ServerVersion     string
+	KernelVersion     string
+	OperatingSystem   string
+	OSType            string
+	Architecture      string
+	NCPU              int
+	MemTotal          int
+}
+
+// function to create DockerInfo struct
+func DockerInfoStruct() DockerInfo {
+	rawData := GetDockerInfo()
+	data := TrimJSON(rawData, 2)
+	InfoStruct := DockerInfo{}
+	err := json.Unmarshal([]byte(data), &InfoStruct)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return InfoStruct
+}
+
 // function to create a container
 func GetLiveContainer() []LiveContainer {
 	fmt.Println(StatsCommand())

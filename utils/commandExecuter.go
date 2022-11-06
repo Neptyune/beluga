@@ -60,6 +60,10 @@ func StatsCommand() string {
 	return CreateTerminalOutput("stats", "--no-stream", "--format", JSONFormat)
 }
 
+func GetDockerInfo() string {
+	return CreateTerminalOutput("info", "--format", JSONFormat)
+}
+
 func CreateTerminalOutput(args ...string) string {
 	var out []byte
 	var err error
