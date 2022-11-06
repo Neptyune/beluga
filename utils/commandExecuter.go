@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
+	"strings"
 	//"strings"
 )
 
@@ -26,16 +27,23 @@ func VolumeList() string {
 }
 
 func ContainerListAsString() string {
-	return CreateTerminalOutput("images", "list")
+	return CreateTerminalOutput("container", "list", "-a")
 
 }
 
-func ContainerListAsSlice() []string {
-	containersAsString := ContainerListAsString()
+func ContainerListAsSlice() [][]string {
+	matrix := [][]string{}
 	re := regexp.MustCompile(" +")
-	split := re.Split(containersAsString, -1)
-	fmt.Println(split)
-	return split
+	containersAsArray := strings.Split(ContainerListAsString(), "\n")
+	for _, line := range containersAsArray {
+		split := re.Split(line, -1)
+		matrix = append(matrix, split)
+	}
+	//fmt.Println(matrix)
+	//for i, slice := range matrix {
+	//	matrix[i] = removeFromSlice(slice, 2)
+	//}
+	return matrix
 }
 
 func ImagesListAsSlice() []string {
@@ -84,4 +92,14 @@ func CreateTerminalOutput(args ...string) string {
 
 func isWindows() bool {
 	return runtime.GOOS == "windows"
+}
+
+func longestWord(slice1 []string) int {
+	largestLength := 0
+	for _, word := range slice1 {
+		if len(word) > largestLength {
+			largestLength = len(word)
+		}
+	}
+	return largestLength
 }

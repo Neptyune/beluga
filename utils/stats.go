@@ -60,17 +60,16 @@ func DockerInfoStruct() DockerInfo {
 
 // function to create a container
 func GetLiveContainer() []LiveContainer {
-	fmt.Println(StatsCommand())
+	//fmt.Println(StatsCommand())
 	rawData := strings.Split(StatsCommand(), "\n")
 	containers := []LiveContainer{}
 	for i, data := range rawData {
-		fmt.Println(data)
+		//fmt.Println(data)
 		if i == len(rawData)-1 {
 			break
 		} else {
 			data = TrimJSON(data, 1)
 		}
-
 		container := LiveContainer{}
 		err := json.Unmarshal([]byte(data), &container)
 		if err != nil {
