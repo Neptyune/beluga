@@ -47,12 +47,12 @@ func ImagesListAsSlice() []string {
 
 }
 
-func removeFromSlice[T any](slice []T, index int) []T {
-	return append(slice[:index], slice[index+1:]...)
-}
-
 func ImagesSearch() {
 	//todo implement
+}
+
+func removeFromSlice[T any](slice []T, index int) []T {
+	return append(slice[:index], slice[index+1:]...)
 }
 
 func CreateTerminalOutput(args ...string) string {
