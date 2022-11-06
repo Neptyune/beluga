@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	commandExecuter "github.com/neptyune/beluga/utils"
 	"os"
 	"strings"
 
@@ -16,14 +17,33 @@ func StartTea() {
 	// Creation of all the View models?
 	containersModelObject := containersModel{}
 	imagesModelObject := imagesModel{}
-	volumesModelObject := volumesModel{}
+	volumesModelOutput := CreateVolumeOutputModel()
+	s := volumesModelOutput.commandPrompts[0]
+	fmt.Println("S is: ", s)
+	volumesModelInput := CreateVolumeInputModel(volumesModelOutput)
+
 	dashboardModelObject := dashboardModel{}
-	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumesModelObject, dashboardModelObject}
+	tabContent := []tea.Model{containersModelObject, imagesModelObject, volumesModelInput, dashboardModelObject}
 
 	m := mainModel{Tabs: tabs, TabContent: tabContent}
 	if err := tea.NewProgram(m, tea.WithAltScreen()).Start(); err != nil {
 		fmt.Printf("There was an error: %v\n", err)
 		os.Exit(1)
+	}
+}
+
+func CreateVolumeOutputModel() volumesOutputModel {
+	return volumesOutputModel{
+		commandPrompts: []interface{}{commandExecuter.VolumeList()},
+	}
+}
+
+func CreateVolumeInputModel(model volumesOutputModel) volumesModel {
+	return volumesModel{
+		commandOptions: []string{"List", "Inspect", "Create", "Prune"},
+		cursor:         1,
+		//volumesOutputModel : model,
+
 	}
 }
 
@@ -64,20 +84,8 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		switch m.state {
-		case container:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		case images:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		case volumes:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		case dashboard:
-			m.TabContent[m.activeTab].Update(msg)
-			break
-		}
+		newMainModel, _ := m.TabContent[m.activeTab].Update(msg)
+		m.TabContent[m.activeTab] = newMainModel
 
 	}
 
