@@ -1,13 +1,10 @@
 package main
 
 import (
-	"fmt"
-	commandExecuter "github.com/neptyune/beluga/utils"
+	"github.com/neptyune/beluga/tui"
 )
 
 func main() {
 	// Here check for host os and any other issues
-	//tui.StartTea()
-	fmt.Println(commandExecuter.VolumeCreate())
-
+	tui.StartTea()
 }
