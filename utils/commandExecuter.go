@@ -18,7 +18,7 @@ func VolumeCreate() string { //haven't tested because idk what removing volumes 
 }
 
 func VolumeInspect() string {
-	return CreateTerminalOutput("volume", "inspect")
+	return CreateTerminalOutput("volume", "inspect", JSONFormat)
 }
 
 func VolumeList() string {
@@ -53,6 +53,11 @@ func ImagesSearch() {
 
 func removeFromSlice[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
+}
+
+// retrieves stats
+func StatsCommand() string {
+	return CreateTerminalOutput("stats", "--no-stream", "--format", JSONFormat)
 }
 
 func CreateTerminalOutput(args ...string) string {
