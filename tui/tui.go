@@ -2,9 +2,10 @@ package tui
 
 import (
 	"fmt"
-	commandExecuter "github.com/neptyune/beluga/utils"
 	"os"
 	"strings"
+
+	commandExecuter "github.com/neptyune/beluga/utils"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -152,7 +153,7 @@ func (m mainModel) View() string {
 		doc.Reset()
 		doc.WriteString(lipgloss.JoinVertical(lipgloss.Left, page, footerMarginAdder.Render(footer)))
 	}
-	doc.WriteString("\n\n" + fmt.Sprintln(layerSpacing[0], layerSpacing[1], sum(layerSpacing[:2]), layerSpacing[:2], "\n", physicalWidth, physicalWidth-sum(layerSpacing[:1])*2))
+	// doc.WriteString("\n\n" + fmt.Sprintln(layerSpacing[0], layerSpacing[1], sum(layerSpacing[:2]), layerSpacing[:2], "\n", physicalWidth, physicalWidth-sum(layerSpacing[:1])*2))
 	return doc.String()
 }
 
