@@ -1,4 +1,4 @@
-package Utils
+package utils
 
 import (
 	"encoding/json"
@@ -6,7 +6,20 @@ import (
 	"strings"
 )
 
-type Container struct {
+const JSONFormat string = "\"{{ json . }}\""
+
+// structs
+type Volume struct {
+	CreatedAt  string
+	Driver     string
+	Labels     string
+	Mountpoint string
+	Name       string
+	Options    string
+	Scope      string
+}
+
+type LiveContainer struct {
 	BlockIO   string `json:"BlockIO"`
 	CPUPerc   string `json:"CPUPerc"`
 	Container string `json:"Container"`
@@ -19,26 +32,38 @@ type Container struct {
 }
 
 // function to create a container
-func CreateContainer() {
-	rawData := StatsCommand()
-	//instance of Container
-	container1 := Container{}
-	data := strings.TrimLeft(rawData, "\"")
-	data = data[:(len(data) - 2)]
-	//fmt.Println(data)
-	err := json.Unmarshal([]byte(data), &container1)
+func GetLiveContainer() []LiveContainer {
+	fmt.Println(StatsCommand())
+	rawData := strings.Split(StatsCommand(), "\n")
+	containers := []LiveContainer{}
+	for i, data := range rawData {
+		fmt.Println(data)
+		if i == len(rawData)-1 {
+			break
+		} else {
+			data = TrimJSON(data, 1)
+		}
 
-	if err != nil {
-		fmt.Println(err)
+		container := LiveContainer{}
+		err := json.Unmarshal([]byte(data), &container)
+		if err != nil {
+			fmt.Println(err)
+		}
+		//fmt.Println("Struct is: ", container)
+		containers = append(containers, container)
 	}
-	fmt.Println("Struct is: ", container1)
+	return containers
 }
 
-// retrieves stats
-func StatsCommand() string {
-	fmt.Println("hello")
-	format := "{{ json . }}"
-	quotedFormat := fmt.Sprintf("%q", format)
-	out := CreateTerminalOutput("/C", "docker", "stats", "--no-stream", "--format", quotedFormat)
-	return out
+func TrimJSON(rawData string, length int) string {
+	data := strings.TrimLeft(rawData, "\"")
+	data = data[:(len(data) - length)]
+	//fmt.Println(data)
+	return data
+}
+
+func GetVolume() {
+	data := VolumeInspect()
+	data = TrimJSON(data, 2)
+	fmt.Println(data)
 }
