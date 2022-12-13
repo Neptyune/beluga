@@ -1,43 +1,53 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbles/stopwatch"
+	"strings"
+	"time"
+
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/guptarohit/asciigraph"
 )
 
-type graphModel struct {
-	stopwatch stopwatch.Model
-	cpu       []float64
-	memory    []float64
-}
-
 type dashboardModel struct {
-	graph graphModel
+	memPercent  float64
+	memProgress progress.Model
 }
 
 func (m dashboardModel) Init() tea.Cmd {
-	return nil
+	prog := progress.New(progress.WithScaledGradient("#FF7CCB", "#FDFF8C"))
+	m.memProgress = prog
+	return tickCmd()
 }
+
+type tickMsg time.Time
 
 func (m dashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "r":
-			updateGraph()
 			return m, nil
 		}
+	case tickMsg:
+		m.memPercent += 0.25
+		if m.memPercent > 1.0 {
+			m.memPercent = 1.0
+			return m, tea.Quit
+		}
+		return m, tickCmd()
+
 	}
 	return m, nil
 }
 
 func (m dashboardModel) View() string {
-
+	pad := strings.Repeat(" ", 2)
+	return "\n Viewing me rn" +
+		pad + m.memProgress.ViewAs(m.memPercent)
 }
 
-func updateGraph() string {
-	return lipgloss.NewStyle().AlignHorizontal(lipgloss.Left).
-		Render(asciigraph.Plot(data))
+func tickCmd() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return tickMsg(t)
+	})
 }

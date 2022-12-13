@@ -33,11 +33,9 @@ type LiveContainer struct {
 
 // function to create a container
 func GetLiveContainer() []LiveContainer {
-	fmt.Println(StatsCommand())
 	rawData := strings.Split(StatsCommand(), "\n")
 	containers := []LiveContainer{}
 	for i, data := range rawData {
-		fmt.Println(data)
 		if i == len(rawData)-1 {
 			break
 		} else {
@@ -49,7 +47,6 @@ func GetLiveContainer() []LiveContainer {
 		if err != nil {
 			fmt.Println(err)
 		}
-		//fmt.Println("Struct is: ", container)
 		containers = append(containers, container)
 	}
 	return containers
@@ -58,12 +55,10 @@ func GetLiveContainer() []LiveContainer {
 func TrimJSON(rawData string, length int) string {
 	data := strings.TrimLeft(rawData, "\"")
 	data = data[:(len(data) - length)]
-	//fmt.Println(data)
 	return data
 }
 
 func GetVolume() {
 	data := VolumeInspect()
 	data = TrimJSON(data, 2)
-	fmt.Println(data)
 }
