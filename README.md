@@ -26,4 +26,4 @@ Built with 🖤 using [Charm tools](https://github.com/charmbracelet).
 [![](https://github.com/NOM1989.png?size=50)](https://github.com/NOM1989)
 [![](https://github.com/annietse.png?size=50)](https://github.com/annietse)
 [![](https://github.com/hegde-atri.png?size=50)](https://github.com/hegde-atri)
-[![](https://github.com/antoshNikolak.png?size=50)](https://github.com/antoshNikolak)
+[![Antosh Nikolak]()](https://github.com/antoshNikolak)
